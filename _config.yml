@@ -1,0 +1,8 @@
+# Tell GitHub Pages to serve our hand-rolled index.html as-is.
+# Without this, Pages would try to render the README.md through a Jekyll theme
+# and our landing page would be hidden behind it.
+plugins: []
+exclude:
+  - SKILL.md
+  - codex-imagegen.sh
+  - README.md

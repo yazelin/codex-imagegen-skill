@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>codex-imagegen — generate images from Claude Code using your ChatGPT subscription</title>
+<meta name="description" content="A Claude Code skill that routes image generation through Codex CLI's $imagegen, using your ChatGPT subscription quota instead of OpenAI Images API credits.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a5b4fc'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-size='38' fill='white' font-family='ui-sans-serif,system-ui'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --ink:        #2d3142;
+    --ink-soft:   #4a5072;
+    --muted:      #7d839b;
+    --bg-1:       #fdf8f3;
+    --bg-2:       #eef2ff;
+    --bg-3:       #f0fdf4;
+    --accent-1:   #a5b4fc;   /* periwinkle */
+    --accent-2:   #fda4af;   /* coral */
+    --accent-3:   #86efac;   /* sage */
+    --accent-4:   #fcd34d;   /* warm cream */
+    --card:       #ffffffcc;
+    --card-edge:  #e6e8f5;
+    --code-bg:    #1e2336;
+    --code-ink:   #e9ecf8;
+    --shadow:     0 6px 30px -8px rgba(60,70,120,.18);
+    --radius:     18px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse 1200px 600px at 10% -10%, var(--bg-2) 0%, transparent 60%),
+      radial-gradient(ellipse 1100px 500px at 95% 5%, var(--bg-3) 0%, transparent 55%),
+      var(--bg-1);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  header { text-align: center; padding: 48px 0 32px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--card-edge);
+    color: var(--ink-soft); font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow);
+  }
+  .badge .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent-3);
+    box-shadow: 0 0 0 4px #86efac33;
+  }
+  h1 {
+    margin: 24px 0 12px;
+    font-size: clamp(36px, 6vw, 56px);
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  h1 .accent { color: var(--accent-1); }
+  .tagline {
+    font-size: clamp(17px, 2.2vw, 20px);
+    color: var(--ink-soft);
+    max-width: 620px;
+    margin: 0 auto;
+  }
+  .cta {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    justify-content: center; margin-top: 28px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 999px;
+    font-weight: 600; font-size: 15px;
+    text-decoration: none; transition: transform .12s ease, box-shadow .12s ease;
+    box-shadow: var(--shadow);
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.primary { background: var(--accent-1); color: white; }
+  .btn.ghost { background: var(--card); color: var(--ink); border: 1px solid var(--card-edge); }
+
+  .card {
+    background: var(--card); backdrop-filter: blur(8px);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius);
+    padding: 28px 28px;
+    box-shadow: var(--shadow);
+    margin: 24px 0;
+  }
+  h2 {
+    font-size: 22px;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2 .num {
+    display: inline-block; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-1); color: white;
+    text-align: center; line-height: 28px; font-size: 14px;
+    margin-right: 10px;
+  }
+  p { margin: 8px 0; color: var(--ink-soft); }
+  ul { margin: 8px 0 12px 22px; color: var(--ink-soft); }
+  li { margin: 4px 0; }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px;
+  }
+  code.inline {
+    background: #eef0fa; color: var(--ink);
+    padding: 2px 6px; border-radius: 6px;
+  }
+  pre {
+    background: var(--code-bg); color: var(--code-ink);
+    padding: 18px 20px; border-radius: 12px;
+    overflow-x: auto; line-height: 1.6;
+    box-shadow: inset 0 0 0 1px #ffffff10;
+  }
+  pre .comment { color: #8b93a8; }
+  pre .accent  { color: #c7d2fe; }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-top: 8px;
+  }
+  @media (min-width: 720px) {
+    .gallery { grid-template-columns: 1fr 1fr; }
+    .gallery .full { grid-column: 1 / -1; }
+  }
+  .shot {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--card-edge);
+    background: white;
+    box-shadow: var(--shadow);
+  }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot .caption {
+    padding: 12px 16px;
+    font-size: 13.5px;
+    color: var(--muted);
+    border-top: 1px solid var(--card-edge);
+    background: #fafbff;
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media (min-width: 720px) {
+    .features { grid-template-columns: 1fr 1fr; }
+  }
+  .feature {
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: white;
+    border: 1px solid var(--card-edge);
+  }
+  .feature h3 {
+    margin: 0 0 6px; font-size: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .feature h3 .ico {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .ico.a1 { background: #e0e7ff; color: #4f46e5; }
+  .ico.a2 { background: #ffe4e6; color: #be123c; }
+  .ico.a3 { background: #d1fae5; color: #047857; }
+  .ico.a4 { background: #fef3c7; color: #b45309; }
+  .feature p { margin: 0; font-size: 14.5px; }
+
+  footer {
+    margin-top: 56px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  footer a { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <span class="badge"><span class="dot"></span>Claude Code skill · MIT</span>
+    <h1>generate images from Claude Code<br><span class="accent">on your ChatGPT subscription</span></h1>
+    <p class="tagline">
+      A tiny skill that routes image generation through Codex CLI's <code class="inline">$imagegen</code>,
+      so your existing ChatGPT Plus/Pro quota does the work — no extra OpenAI API credits.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/yazelin/codex-imagegen-skill">View on GitHub →</a>
+      <a class="btn ghost" href="#install">How to install</a>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2><span class="num">1</span>Why this exists</h2>
+    <p>
+      You already pay for ChatGPT. You already have Codex CLI installed. And Codex CLI happens to
+      ship with a built-in <code class="inline">$imagegen</code> tool. So why pay
+      <em>again</em> for OpenAI Images API credits when you want Claude Code to generate an image?
+    </p>
+    <p>
+      This skill bridges Claude Code and Codex CLI: Claude phrases the prompt, the skill shells out to
+      <code class="inline">codex exec '$imagegen ...'</code>, and the PNG lands wherever you asked.
+      ~40-70 seconds per image, zero marginal cost on top of your subscription.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">2</span>What it can produce</h2>
+    <div class="gallery">
+      <div class="shot full">
+        <img src="examples/shiba.png" alt="Watercolor Shiba Inu with red bow tie" loading="lazy">
+        <div class="caption">A tiny Shiba Inu wearing a red bow tie, watercolor illustration — first sanity test.</div>
+      </div>
+      <div class="shot">
+        <img src="examples/blog-cover-ssh-security.png" alt="Blog cover: SSH security" loading="lazy">
+        <div class="caption">Tech-blog cover: a shield protecting a server rack, pastel 3D illustration.</div>
+      </div>
+      <div class="shot">
+        <img src="examples/blog-cover-telegram-claude-bot.png" alt="Blog cover: Telegram + Claude bot" loading="lazy">
+        <div class="caption">Tech-blog cover: a friendly bot bridging Telegram and a code editor.</div>
+      </div>
+    </div>
+    <p style="margin-top: 16px;">
+      These were generated by the same script in this repo, with a shared pastel-illustration style
+      prompt appended to each per-image concept. It scaled cleanly to a 26-image batch.
+    </p>
+  </section>
+
+  <section class="card" id="install">
+    <h2><span class="num">3</span>Install</h2>
+    <p>Prerequisites: <a href="https://github.com/openai/codex">Codex CLI</a> installed and <code class="inline">codex login</code> done.</p>
+<pre><span class="comment"># clone the repo straight into your Claude Code skills directory</span>
+<span class="accent">git clone</span> https://github.com/yazelin/codex-imagegen-skill ~/.claude/skills/codex-imagegen
+<span class="accent">chmod +x</span> ~/.claude/skills/codex-imagegen/codex-imagegen.sh</pre>
+    <p>Restart Claude Code and the <code class="inline">codex-imagegen</code> skill is available.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">4</span>Verify</h2>
+    <p>Inside Claude Code, just ask:</p>
+<pre>Generate a cute Shiba Inu with a red bow tie in watercolor style,
+save to /tmp/test-shiba.png</pre>
+    <p>Or run the bundled script directly:</p>
+<pre>~/.claude/skills/codex-imagegen/codex-imagegen.sh \
+  <span class="accent">"a tiny shiba inu with a red bow tie, watercolor, no text"</span> \
+  /tmp/test-shiba.png</pre>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">5</span>What's in the box</h2>
+    <div class="features">
+      <div class="feature">
+        <h3><span class="ico a1">⌘</span>SKILL.md</h3>
+        <p>The trigger-and-usage doc Claude reads. Covers when to use, when not to use, and prompt craft tips.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="ico a2">⏵</span>codex-imagegen.sh</h3>
+        <p>Standalone wrapper. Runs <code class="inline">codex exec '$imagegen ...'</code>, locates the output PNG, copies it to your target path.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="ico a3">✓</span>Portable</h3>
+        <p>Works on Linux, macOS, WSL. Sidesteps Codex's bubblewrap sandbox by doing the file copy in the host shell.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="ico a4">⚠</span>Honest about limits</h3>
+        <p>Personal/dev use only. Don't power production multi-user services with a personal subscription — that's against the spirit of the terms.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      MIT licensed · <a href="https://github.com/yazelin/codex-imagegen-skill">github.com/yazelin/codex-imagegen-skill</a>
+    </p>
+    <p>
+      Built collaboratively by <a href="https://github.com/yazelin">@yazelin</a> + Claude Code.
+    </p>
+  </footer>
+
+</div>
+
+</body>
+</html>
