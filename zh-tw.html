@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>codex-imagegen — generate images from Claude Code using your ChatGPT subscription</title>
-<meta name="description" content="A Claude Code skill that routes image generation through Codex CLI's $imagegen, using your ChatGPT subscription quota instead of OpenAI Images API credits.">
+<title>codex-imagegen — 用 ChatGPT 訂閱額度在 Claude Code 裡生圖</title>
+<meta name="description" content="一個 Claude Code skill，把生圖請求導到 Codex CLI 的 $imagegen — 吃你既有的 ChatGPT 訂閱配額，不必再付 OpenAI Images API 的錢。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23a5b4fc'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-size='38' fill='white' font-family='ui-sans-serif,system-ui'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
 <style>
   :root {
@@ -14,10 +14,10 @@
     --bg-1:       #fdf8f3;
     --bg-2:       #eef2ff;
     --bg-3:       #f0fdf4;
-    --accent-1:   #a5b4fc;   /* periwinkle */
-    --accent-2:   #fda4af;   /* coral */
-    --accent-3:   #86efac;   /* sage */
-    --accent-4:   #fcd34d;   /* warm cream */
+    --accent-1:   #a5b4fc;
+    --accent-2:   #fda4af;
+    --accent-3:   #86efac;
+    --accent-4:   #fcd34d;
     --card:       #ffffffcc;
     --card-edge:  #e6e8f5;
     --code-bg:    #1e2336;
@@ -28,7 +28,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
-    font: 16px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+    font: 16px/1.7 "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     color: var(--ink);
     background:
       radial-gradient(ellipse 1200px 600px at 10% -10%, var(--bg-2) 0%, transparent 60%),
@@ -56,18 +56,19 @@
   }
   h1 {
     margin: 24px 0 12px;
-    font-size: clamp(36px, 6vw, 56px);
-    line-height: 1.05;
+    font-size: clamp(34px, 5.5vw, 52px);
+    line-height: 1.15;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     color: var(--ink);
   }
   h1 .accent { color: var(--accent-1); }
   .tagline {
-    font-size: clamp(17px, 2.2vw, 20px);
+    font-size: clamp(16px, 2vw, 19px);
     color: var(--ink-soft);
-    max-width: 620px;
+    max-width: 640px;
     margin: 0 auto;
+    line-height: 1.7;
   }
   .cta {
     display: flex; gap: 12px; flex-wrap: wrap;
@@ -211,127 +212,127 @@
 
 <div class="wrap" style="position: relative;">
 
-  <nav class="lang-switch" aria-label="Language switcher">
-    <span class="active">EN</span>
-    <a href="zh-tw.html">繁中</a>
+  <nav class="lang-switch" aria-label="語言切換">
+    <a href="index.html">EN</a>
+    <span class="active">繁中</span>
   </nav>
 
   <header>
     <span class="badge"><span class="dot"></span>Claude Code skill · MIT</span>
-    <h1>generate images from Claude Code<br><span class="accent">on your ChatGPT subscription</span></h1>
+    <h1>在 Claude Code 裡生圖<br><span class="accent">吃你的 ChatGPT 訂閱額度</span></h1>
     <p class="tagline">
-      A tiny skill that routes image generation through Codex CLI's <code class="inline">$imagegen</code>,
-      so your existing ChatGPT Plus/Pro quota does the work — no extra OpenAI API credits.
+      一個小小的 skill，把生圖請求導到 Codex CLI 的 <code class="inline">$imagegen</code>，
+      用你既有的 ChatGPT Plus / Pro 配額去畫圖——不必再為 OpenAI Images API 額外掏錢。
     </p>
     <div class="cta">
-      <a class="btn primary" href="https://github.com/yazelin/codex-imagegen-skill">View on GitHub →</a>
-      <a class="btn ghost" href="#install">How to install</a>
+      <a class="btn primary" href="https://github.com/yazelin/codex-imagegen-skill">前往 GitHub →</a>
+      <a class="btn ghost" href="#install">安裝方法</a>
     </div>
   </header>
 
   <section class="card">
-    <h2><span class="num">1</span>Why this exists</h2>
+    <h2><span class="num">1</span>為什麼需要這個</h2>
     <p>
-      You already pay for ChatGPT. You already have Codex CLI installed. And Codex CLI happens to
-      ship with a built-in <code class="inline">$imagegen</code> tool. So why pay
-      <em>again</em> for OpenAI Images API credits when you want Claude Code to generate an image?
+      你已經在付 ChatGPT 訂閱了。你也裝了 Codex CLI。Codex CLI 內建了一個
+      <code class="inline">$imagegen</code> 工具可以生圖。那麼，當你想在 Claude Code 裡讓 AI 幫你生一張圖時，
+      <em>為什麼還要再花錢去買 OpenAI Images API 的 credits？</em>
     </p>
     <p>
-      This skill bridges Claude Code and Codex CLI: Claude phrases the prompt, the skill shells out to
-      <code class="inline">codex exec '$imagegen ...'</code>, and the PNG lands wherever you asked.
-      ~40-70 seconds per image, zero marginal cost on top of your subscription.
+      這個 skill 就是 Claude Code 和 Codex CLI 中間的橋——Claude 負責寫 prompt，
+      skill 在底層呼叫 <code class="inline">codex exec '$imagegen ...'</code>，PNG 就落到你指定的位置。
+      一張圖大約 40–70 秒，相對於訂閱費**沒有額外成本**。
     </p>
   </section>
 
   <section class="card">
-    <h2><span class="num">2</span>What it can produce</h2>
+    <h2><span class="num">2</span>它能生出什麼樣的圖</h2>
     <div class="gallery">
       <div class="shot full">
-        <img src="examples/shiba.png" alt="Watercolor Shiba Inu with red bow tie" loading="lazy">
-        <div class="caption">A tiny Shiba Inu wearing a red bow tie, watercolor illustration — first sanity test.</div>
+        <img src="examples/shiba.png" alt="水彩風格戴紅領結的小柴犬" loading="lazy">
+        <div class="caption">一隻戴紅色領結的小柴犬，水彩插畫風格——第一次煙霧測試。</div>
       </div>
       <div class="shot">
-        <img src="examples/blog-cover-ssh-security.png" alt="Blog cover: SSH security" loading="lazy">
-        <div class="caption">Tech-blog cover: a shield protecting a server rack, pastel 3D illustration.</div>
+        <img src="examples/blog-cover-ssh-security.png" alt="部落格封面：SSH 資安" loading="lazy">
+        <div class="caption">技術部落格封面：用盾牌保護伺服器機架，pastel 3D 插畫風。</div>
       </div>
       <div class="shot">
-        <img src="examples/blog-cover-telegram-claude-bot.png" alt="Blog cover: Telegram + Claude bot" loading="lazy">
-        <div class="caption">Tech-blog cover: a friendly bot bridging Telegram and a code editor.</div>
+        <img src="examples/blog-cover-telegram-claude-bot.png" alt="部落格封面：Telegram + Claude bot" loading="lazy">
+        <div class="caption">技術部落格封面：友善的機器人連結 Telegram 與程式編輯器。</div>
       </div>
     </div>
     <p style="margin-top: 16px;">
-      These were generated by the same script in this repo, with a shared pastel-illustration style
-      prompt appended to each per-image concept. It scaled cleanly to a 26-image batch.
+      這幾張都是同一個腳本生的，共用一段 pastel 插畫風格 prompt，每張再加上專屬的概念描述。
+      實測 batch 處理 26 張完全沒問題。
     </p>
   </section>
 
   <section class="card">
-    <h2><span class="num">3</span>Just want raw Codex (no skill)?</h2>
-    <p>If you don't need Claude Code in the loop, call <code class="inline">$imagegen</code> straight from Codex:</p>
-<pre><span class="comment"># interactive</span>
+    <h2><span class="num">3</span>不裝 skill，直接用 Codex 可以嗎？</h2>
+    <p>當然可以。如果你完全不需要 Claude Code 在中間，那直接打 <code class="inline">$imagegen</code> 就好：</p>
+<pre><span class="comment"># 互動式</span>
 <span class="accent">codex</span>
-&gt; $imagegen a tiny shiba inu wearing a red bow tie, watercolor, no text
+&gt; $imagegen 一隻戴紅領結的柴犬，水彩，不要文字
 
-<span class="comment"># non-interactive (one-shot)</span>
+<span class="comment"># 非互動式（一行從 shell 打）</span>
 <span class="accent">codex exec</span> -C "$(pwd)" -s workspace-write --skip-git-repo-check \
-  '$imagegen a tiny shiba inu wearing a red bow tie, watercolor, no text'</pre>
-    <p>Either way, the PNG lands at <code class="inline">~/.codex/generated_images/&lt;session-id&gt;/ig_*.png</code>. This skill exists because the non-interactive form is awkward to script — you have to parse Codex's stdout for the session id, find the PNG, copy it out, and dodge Codex's sandbox eating your <code class="inline">cp</code>. The wrapper handles all of that.</p>
+  '$imagegen 一隻戴紅領結的柴犬，水彩，不要文字'</pre>
+    <p>PNG 都會落在 <code class="inline">~/.codex/generated_images/&lt;session-id&gt;/ig_*.png</code>。這個 skill 存在的意義是把非互動模式自動化——你要解析 codex 的 stdout 找 session id、定位 PNG、複製出來、還要繞過 codex 自己的 bwrap sandbox 把 <code class="inline">cp</code> 吃掉的問題，這些都包好了。</p>
     <p style="margin-top:14px;">
-      <strong>Availability:</strong> <code class="inline">$imagegen</code> shipped as a built-in skill in
-      <a href="https://github.com/openai/codex/pull/15600">Codex CLI v0.117.0</a> on
-      <strong>2026-03-26</strong>; upgraded to <code class="inline">gpt-image-2</code> in v0.123.0 on 2026-04-23.
-      Make sure your Codex is up to date with <code class="inline">npm i -g @openai/codex</code>.
+      <strong>支援版本：</strong><code class="inline">$imagegen</code> 從
+      <a href="https://github.com/openai/codex/pull/15600">Codex CLI v0.117.0（2026-03-26）</a>
+      開始正式變成 built-in skill；v0.123.0（2026-04-23）升級到 <code class="inline">gpt-image-2</code>。
+      用 <code class="inline">npm i -g @openai/codex</code> 更新到最新。
     </p>
   </section>
 
   <section class="card" id="install">
-    <h2><span class="num">4</span>Install</h2>
-    <p>Prerequisites: <a href="https://github.com/openai/codex">Codex CLI</a> installed and <code class="inline">codex login</code> done.</p>
-<pre><span class="comment"># clone the repo straight into your Claude Code skills directory</span>
+    <h2><span class="num">4</span>安裝</h2>
+    <p>前置：已安裝 <a href="https://github.com/openai/codex">Codex CLI</a> 並 <code class="inline">codex login</code> 過。</p>
+<pre><span class="comment"># 把 repo 直接 clone 進你的 Claude Code skills 目錄</span>
 <span class="accent">git clone</span> https://github.com/yazelin/codex-imagegen-skill ~/.claude/skills/codex-imagegen
 <span class="accent">chmod +x</span> ~/.claude/skills/codex-imagegen/codex-imagegen.sh</pre>
-    <p>Restart Claude Code and the <code class="inline">codex-imagegen</code> skill is available.</p>
+    <p>重啟 Claude Code，<code class="inline">codex-imagegen</code> skill 就可以用了。</p>
   </section>
 
   <section class="card">
-    <h2><span class="num">5</span>Verify</h2>
-    <p>Inside Claude Code, just ask:</p>
-<pre>Generate a cute Shiba Inu with a red bow tie in watercolor style,
-save to /tmp/test-shiba.png</pre>
-    <p>Or run the bundled script directly:</p>
+    <h2><span class="num">5</span>驗證</h2>
+    <p>在 Claude Code 裡，直接這樣請求：</p>
+<pre>幫我生一張水彩風格、戴紅色領結的小柴犬，
+存到 /tmp/test-shiba.png</pre>
+    <p>或從 shell 直接跑內附腳本：</p>
 <pre>~/.claude/skills/codex-imagegen/codex-imagegen.sh \
   <span class="accent">"a tiny shiba inu with a red bow tie, watercolor, no text"</span> \
   /tmp/test-shiba.png</pre>
   </section>
 
   <section class="card">
-    <h2><span class="num">6</span>What's in the box</h2>
+    <h2><span class="num">6</span>裝箱內容</h2>
     <div class="features">
       <div class="feature">
         <h3><span class="ico a1">⌘</span>SKILL.md</h3>
-        <p>The trigger-and-usage doc Claude reads. Covers when to use, when not to use, and prompt craft tips.</p>
+        <p>給 Claude 讀的觸發 + 用法文件。包含什麼時候用、什麼時候不用、prompt 怎麼寫。</p>
       </div>
       <div class="feature">
         <h3><span class="ico a2">⏵</span>codex-imagegen.sh</h3>
-        <p>Standalone wrapper. Runs <code class="inline">codex exec '$imagegen ...'</code>, locates the output PNG, copies it to your target path.</p>
+        <p>獨立的 wrapper。呼叫 <code class="inline">codex exec '$imagegen ...'</code>、找到輸出 PNG、複製到你指定的位置。</p>
       </div>
       <div class="feature">
-        <h3><span class="ico a3">✓</span>Portable</h3>
-        <p>Works on Linux, macOS, WSL. Sidesteps Codex's bubblewrap sandbox by doing the file copy in the host shell.</p>
+        <h3><span class="ico a3">✓</span>跨平台</h3>
+        <p>Linux、macOS、WSL 都跑得起來。檔案複製在 host shell 做，繞過 Codex 自己的 bwrap sandbox 問題。</p>
       </div>
       <div class="feature">
-        <h3><span class="ico a4">⚠</span>Honest about limits</h3>
-        <p>Personal/dev use only. Don't power production multi-user services with a personal subscription — that's against the spirit of the terms.</p>
+        <h3><span class="ico a4">⚠</span>誠實標註限制</h3>
+        <p>僅供個人 / 開發用途。請勿把這個拿去當 production 多人服務的後端——那違反訂閱條款的精神。</p>
       </div>
     </div>
   </section>
 
   <footer>
     <p>
-      MIT licensed · <a href="https://github.com/yazelin/codex-imagegen-skill">github.com/yazelin/codex-imagegen-skill</a>
+      MIT 授權 · <a href="https://github.com/yazelin/codex-imagegen-skill">github.com/yazelin/codex-imagegen-skill</a>
     </p>
     <p>
-      Built collaboratively by <a href="https://github.com/yazelin">@yazelin</a> + Claude Code.
+      由 <a href="https://github.com/yazelin">@yazelin</a> 和 Claude Code 共同打造。
     </p>
   </footer>
 
