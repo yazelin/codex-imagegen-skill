@@ -65,6 +65,41 @@ Or test the bundled script directly from your shell:
 
 The script prints the absolute path of the saved PNG on success.
 
+## Just want to use Codex CLI directly (no skill)?
+
+If you don't even need Claude Code in the loop, you can call `$imagegen` straight from Codex CLI:
+
+**Interactive (Codex TUI):**
+
+```
+codex
+> $imagegen a tiny shiba inu wearing a red bow tie, watercolor style, no text
+```
+
+Codex saves the PNG to `~/.codex/generated_images/<session-id>/ig_*.png`.
+
+**Non-interactive (one-shot from your shell):**
+
+```bash
+codex exec -C "$(pwd)" -s workspace-write --skip-git-repo-check \
+  '$imagegen a tiny shiba inu wearing a red bow tie, watercolor style, no text'
+```
+
+The output still lands in `~/.codex/generated_images/<session-id>/` — Codex prints the session id so you can find it.
+
+This skill exists because the second form is awkward to script: you have to parse stdout for the session id, find the PNG, copy it where you actually want it, and avoid Codex's bubblewrap sandbox eating your `cp`. The bundled wrapper does all of that for you.
+
+## Availability
+
+`$imagegen` landed as a built-in Codex CLI skill in **v0.117.0** (released **2026-03-26**, [PR #15600](https://github.com/openai/codex/pull/15600)).
+
+The underlying image model was upgraded to **ImageGen 2 / `gpt-image-2`** in **v0.123.0** (released **2026-04-23**, [PR #18852](https://github.com/openai/codex/pull/18852)). Make sure your Codex CLI is at least that version for best results.
+
+```bash
+codex --version   # should report >= 0.123.0
+npm i -g @openai/codex   # update if needed
+```
+
 ## How it works
 
 `codex exec` (Codex's non-interactive mode) runs the `$imagegen` shorthand the same way the interactive TUI does. The OpenAI image model produces a PNG and Codex saves it to `~/.codex/generated_images/<session-id>/ig_*.png`. Our wrapper script:

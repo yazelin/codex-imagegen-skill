@@ -240,8 +240,27 @@
     </p>
   </section>
 
+  <section class="card">
+    <h2><span class="num">3</span>Just want raw Codex (no skill)?</h2>
+    <p>If you don't need Claude Code in the loop, call <code class="inline">$imagegen</code> straight from Codex:</p>
+<pre><span class="comment"># interactive</span>
+<span class="accent">codex</span>
+&gt; $imagegen a tiny shiba inu wearing a red bow tie, watercolor, no text
+
+<span class="comment"># non-interactive (one-shot)</span>
+<span class="accent">codex exec</span> -C "$(pwd)" -s workspace-write --skip-git-repo-check \
+  '$imagegen a tiny shiba inu wearing a red bow tie, watercolor, no text'</pre>
+    <p>Either way, the PNG lands at <code class="inline">~/.codex/generated_images/&lt;session-id&gt;/ig_*.png</code>. This skill exists because the non-interactive form is awkward to script — you have to parse Codex's stdout for the session id, find the PNG, copy it out, and dodge Codex's sandbox eating your <code class="inline">cp</code>. The wrapper handles all of that.</p>
+    <p style="margin-top:14px;">
+      <strong>Availability:</strong> <code class="inline">$imagegen</code> shipped as a built-in skill in
+      <a href="https://github.com/openai/codex/pull/15600">Codex CLI v0.117.0</a> on
+      <strong>2026-03-26</strong>; upgraded to <code class="inline">gpt-image-2</code> in v0.123.0 on 2026-04-23.
+      Make sure your Codex is up to date with <code class="inline">npm i -g @openai/codex</code>.
+    </p>
+  </section>
+
   <section class="card" id="install">
-    <h2><span class="num">3</span>Install</h2>
+    <h2><span class="num">4</span>Install</h2>
     <p>Prerequisites: <a href="https://github.com/openai/codex">Codex CLI</a> installed and <code class="inline">codex login</code> done.</p>
 <pre><span class="comment"># clone the repo straight into your Claude Code skills directory</span>
 <span class="accent">git clone</span> https://github.com/yazelin/codex-imagegen-skill ~/.claude/skills/codex-imagegen
@@ -250,7 +269,7 @@
   </section>
 
   <section class="card">
-    <h2><span class="num">4</span>Verify</h2>
+    <h2><span class="num">5</span>Verify</h2>
     <p>Inside Claude Code, just ask:</p>
 <pre>Generate a cute Shiba Inu with a red bow tie in watercolor style,
 save to /tmp/test-shiba.png</pre>
@@ -261,7 +280,7 @@ save to /tmp/test-shiba.png</pre>
   </section>
 
   <section class="card">
-    <h2><span class="num">5</span>What's in the box</h2>
+    <h2><span class="num">6</span>What's in the box</h2>
     <div class="features">
       <div class="feature">
         <h3><span class="ico a1">⌘</span>SKILL.md</h3>
