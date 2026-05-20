@@ -1,13 +1,14 @@
 # codex-imagegen
 
-A [Claude Code](https://claude.com/claude-code) skill that generates images by routing through [Codex CLI](https://github.com/openai/codex)'s built-in `$imagegen` tool — using your **ChatGPT subscription quota** instead of OpenAI Images API credits.
+A [Claude Code](https://claude.com/claude-code) skill that generates **or edits** images by routing through [Codex CLI](https://github.com/openai/codex)'s built-in `$imagegen` tool — using your **ChatGPT subscription quota** instead of OpenAI Images API credits.
 
-If you already pay for ChatGPT (Plus / Pro) and you already have Codex CLI installed, you can generate images from Claude Code without spending another cent.
+If you already pay for ChatGPT (Plus / Pro) and you already have Codex CLI installed, you can generate or composite images from Claude Code without spending another cent.
 
 ## What this gives you
 
-- A skill Claude Code automatically picks up when you ask it to generate an image
+- A skill Claude Code automatically picks up when you ask it to generate or edit an image
 - A standalone CLI script (`codex-imagegen.sh`) you can use in any batch pipeline
+- **Multi-image edit**: pass 1–4 reference images for composition / outfit-swap / scene-merge / style-transfer / text-localization (powered by `gpt-image` edit mode)
 - Detailed prompt-craft guidance baked into the skill so the model produces consistent, useful outputs
 
 ## Example output
@@ -58,12 +59,20 @@ Claude should invoke the skill and you should see a PNG appear at `/tmp/test-shi
 Or test the bundled script directly from your shell:
 
 ```bash
+# Text-to-image (2 args)
 ~/.claude/skills/codex-imagegen/codex-imagegen.sh \
   "a tiny shiba inu with a red bow tie, watercolor, no text" \
   /tmp/test-shiba.png
+
+# Image-edit / composition (3+ args: prompt, target, then 1–4 reference images)
+~/.claude/skills/codex-imagegen/codex-imagegen.sh \
+  "place the subject from image 1 into the scene from image 2; match lighting and perspective" \
+  /tmp/test-composite.png \
+  ~/Pictures/person.png \
+  ~/Pictures/kitchen.png
 ```
 
-The script prints the absolute path of the saved PNG on success.
+The script prints the absolute path of the saved PNG on success. In edit mode it builds a `--image <abs>` flag for each reference and the canonical `Use case: image-edit / Input images: Image 1: … / Image 2: …` prompt scaffolding that `gpt-image`'s edit mode keys off.
 
 ## Just want to use Codex CLI directly (no skill)?
 
@@ -81,13 +90,26 @@ Codex saves the PNG to `~/.codex/generated_images/<session-id>/ig_*.png`.
 **Non-interactive (one-shot from your shell):**
 
 ```bash
+# text-to-image
 codex exec -C "$(pwd)" -s workspace-write --skip-git-repo-check \
   '$imagegen a tiny shiba inu wearing a red bow tie, watercolor style, no text'
+
+# image-edit (codex CLI's --image flag is variadic; -- stops the prompt being
+# eaten as another image filename)
+codex exec -C "$(pwd)" -s workspace-write --skip-git-repo-check \
+  --image /abs/path/person.png --image /abs/path/kitchen.png -- \
+  '$imagegen
+Use case: image-edit
+Input images:
+Image 1: /abs/path/person.png
+Image 2: /abs/path/kitchen.png
+Primary request: place the subject from image 1 into the scene from image 2; match lighting and perspective
+Constraints: treat the input images as references the user is composing with'
 ```
 
 The output still lands in `~/.codex/generated_images/<session-id>/` — Codex prints the session id so you can find it.
 
-This skill exists because the second form is awkward to script: you have to parse stdout for the session id, find the PNG, copy it where you actually want it, and avoid Codex's bubblewrap sandbox eating your `cp`. The bundled wrapper does all of that for you.
+This skill exists because the second form is awkward to script: you have to parse stdout for the session id, find the PNG, copy it where you actually want it, avoid Codex's bubblewrap sandbox eating your `cp`, and (for multi-image edits) build the canonical `Use case / Input images / Primary request / Constraints` scaffolding that `gpt-image`'s edit mode keys off. The bundled wrapper does all of that for you.
 
 ## Availability
 

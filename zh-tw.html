@@ -221,7 +221,7 @@
     <span class="badge"><span class="dot"></span>Claude Code skill · MIT</span>
     <h1>在 Claude Code 裡生圖<br><span class="accent">吃你的 ChatGPT 訂閱額度</span></h1>
     <p class="tagline">
-      一個小小的 skill，把生圖請求導到 Codex CLI 的 <code class="inline">$imagegen</code>，
+      一個小小的 skill，把生圖<strong>跟多圖編輯</strong>請求導到 Codex CLI 的 <code class="inline">$imagegen</code>，
       用你既有的 ChatGPT Plus / Pro 配額去畫圖——不必再為 OpenAI Images API 額外掏錢。
     </p>
     <div class="cta">
@@ -299,14 +299,42 @@
     <p>在 Claude Code 裡，直接這樣請求：</p>
 <pre>幫我生一張水彩風格、戴紅色領結的小柴犬，
 存到 /tmp/test-shiba.png</pre>
-    <p>或從 shell 直接跑內附腳本：</p>
+    <p>或從 shell 直接跑內附腳本（純生圖、2 個參數）：</p>
 <pre>~/.claude/skills/codex-imagegen/codex-imagegen.sh \
   <span class="accent">"a tiny shiba inu with a red bow tie, watercolor, no text"</span> \
   /tmp/test-shiba.png</pre>
   </section>
 
   <section class="card">
-    <h2><span class="num">6</span>裝箱內容</h2>
+    <h2><span class="num">6</span>多圖編輯 <span style="font-size:14px; font-weight:500; color:var(--accent-2);">· 新功能</span></h2>
+    <p>把 <strong>1–4 張參考圖</strong>當尾巴位置參數塞給腳本，就能做 composition（合成）/ outfit-swap（換裝）/ scene-merge（場景合併）/ style-transfer（風格轉換）/ text-localization（文字本地化）。腳本會自動組出 <code class="inline">gpt-image</code> edit mode 認得的 canonical scaffolding（<code class="inline">Use case: image-edit / Input images: Image 1: … / Image 2: …</code>），並對每張參考圖 emit 一個 <code class="inline">--image</code> flag 進 <code class="inline">codex exec</code>。</p>
+<pre><span class="comment"># 合成：把第一張的主體放進第二張的場景</span>
+~/.claude/skills/codex-imagegen/codex-imagegen.sh \
+  <span class="accent">"place the subject from image 1 into the scene from image 2; match lighting and perspective"</span> \
+  /tmp/composite.png \
+  ~/Pictures/person.png \
+  ~/Pictures/kitchen.png
+
+<span class="comment"># 換裝：兩件衣服 reference</span>
+~/.claude/skills/codex-imagegen/codex-imagegen.sh \
+  <span class="accent">"replace the clothing on image 1 with the garment from image 2 and the shoes from image 3; preserve face, body, and pose"</span> \
+  /tmp/outfit.png \
+  ~/Pictures/model.png \
+  ~/Pictures/jacket.png \
+  ~/Pictures/shoes.png</pre>
+    <p>多圖 prompt 要用 <em>image 1 / image 2 / …</em> 來指稱每張圖在合成裡的角色。常見用例：</p>
+    <ul>
+      <li><strong>composition</strong>（合成）— "place subject from image 1 into the scene from image 2"</li>
+      <li><strong>outfit-swap</strong>（換裝）— "replace clothing on image 1 with garments from image 2 and image 3"</li>
+      <li><strong>style-transfer</strong>（風格轉換）— "apply the visual style of image 1 to the subject in image 2"</li>
+      <li><strong>text-localization</strong>（文字本地化）— "translate every text element in image 1 to Japanese; preserve typography"</li>
+      <li><strong>sketch-to-render</strong>（草圖實體化）— "turn the line drawing in image 1 into a photorealistic render"</li>
+    </ul>
+    <p>4 張的上限是實作上的保守預設——<code class="inline">gpt-image</code> 本身吃得更多，但實測 2-3 張組合品質最好。真有需要可以直接改 script 裡的上限。</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">7</span>裝箱內容</h2>
     <div class="features">
       <div class="feature">
         <h3><span class="ico a1">⌘</span>SKILL.md</h3>
@@ -314,7 +342,7 @@
       </div>
       <div class="feature">
         <h3><span class="ico a2">⏵</span>codex-imagegen.sh</h3>
-        <p>獨立的 wrapper。呼叫 <code class="inline">codex exec '$imagegen ...'</code>、找到輸出 PNG、複製到你指定的位置。</p>
+        <p>獨立的 wrapper。2 個參數做純生圖；尾巴塞 1–4 張參考圖就變多圖編輯。自動定位輸出 PNG、複製到你指定的位置。</p>
       </div>
       <div class="feature">
         <h3><span class="ico a3">✓</span>跨平台</h3>
