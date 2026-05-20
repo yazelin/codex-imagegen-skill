@@ -1,11 +1,16 @@
 ---
 name: codex-imagegen
-description: Generate images via Codex CLI's $imagegen shorthand, using the user's ChatGPT subscription quota instead of OpenAI Images API credits. Use when the user wants to generate one or more PNG images from text prompts, has Codex CLI installed and logged in, and the use case is personal/local (not a production backend serving end users).
+description: Generate or edit images via Codex CLI's $imagegen shorthand, using the user's ChatGPT subscription quota instead of OpenAI Images API credits. Supports pure text-to-image AND multi-image edit (composition, outfit-swap, scene-merge, style-transfer) with 1–4 reference images. Use when the user wants to generate or transform PNG images, has Codex CLI installed and logged in, and the use case is personal/local (not a production backend serving end users).
 ---
 
 # codex-imagegen
 
-Generate images by invoking Codex CLI's built-in `$imagegen` tool in non-interactive (`codex exec`) mode, then copying the resulting PNG out of Codex's default output directory to a path of your choice.
+Generate or edit images by invoking Codex CLI's built-in `$imagegen` tool in non-interactive (`codex exec`) mode, then copying the resulting PNG out of Codex's default output directory to a path of your choice.
+
+Two modes:
+
+- **Text-to-image** (default, 2-arg form): generate a brand-new image from a text prompt.
+- **Image-edit** (3+ arg form): pass 1–4 reference images so `gpt-image` can do composition, outfit-swap, scene-merge, style-transfer, text-localization, etc. The script builds the canonical `Use case: image-edit` / `Input images: Image 1 / Image 2 / ...` prompt scaffolding the built-in `image_gen` tool keys off.
 
 ## When this skill applies
 
@@ -25,19 +30,40 @@ Do **NOT** use this skill when:
 The skill ships with `codex-imagegen.sh`. Run it from the directory containing this `SKILL.md`:
 
 ```bash
-bash "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/skills/codex-imagegen}/codex-imagegen.sh" "<prompt>" "<output-path>"
+# Text-to-image
+bash "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/skills/codex-imagegen}/codex-imagegen.sh" \
+  "<prompt>" "<output-path>"
+
+# Image-edit (1–4 reference images)
+bash "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/skills/codex-imagegen}/codex-imagegen.sh" \
+  "<edit prompt>" "<output-path>" "<ref1.png>" "<ref2.png>" ...
 ```
 
 Or just resolve the script relative to where the skill was installed.
 
 The script:
 
-1. Runs `codex exec -C "$(pwd)" -s workspace-write --skip-git-repo-check '$imagegen <prompt>'`
-2. Extracts the session id from Codex's stdout
-3. Locates the generated PNG in `~/.codex/generated_images/<session-id>/`
-4. Copies it to `<output-path>` and prints the absolute path
+1. Validates reference image paths exist (if any) and resolves them to absolute paths.
+2. Runs `codex exec -C "$(pwd)" -s workspace-write --skip-git-repo-check [--image P]... [--] '$imagegen <built prompt>'`. In edit mode, each `--image` flag carries one reference; the `--` separator stops the positional prompt being parsed as another image. The built prompt follows the canonical scaffolding (`Use case: image-edit`, `Input images: Image 1: …`, `Primary request: …`, `Constraints: …`).
+3. Extracts the session id from Codex's stdout.
+4. Locates the generated PNG in `~/.codex/generated_images/<session-id>/`.
+5. Copies it to `<output-path>` and prints the absolute path.
 
-On success the script prints **one line** — the absolute path of the saved PNG. Use that path to read the image back, embed it, upload it, etc.
+On success the script prints **one line** — the absolute path of the saved PNG.
+
+### Writing edit prompts
+
+For multi-image edits the prompt should reference inputs by their position in the arg list (`image 1`, `image 2`, …). Examples:
+
+| Use case | Prompt template |
+|---|---|
+| composition | "place the subject from image 1 into the scene from image 2; match lighting and perspective" |
+| outfit-swap | "replace only the clothing on image 1 with the garments from image 2 and image 3; preserve face, body shape, and pose" |
+| style-transfer | "apply the visual style of image 1 to the subject in image 2; preserve composition of image 2" |
+| text-localization | "translate every text element in image 1 to Japanese; preserve typography, layout, and spacing" |
+| sketch-to-render | "turn the line drawing in image 1 into a photorealistic render; preserve layout and proportions" |
+
+The script enforces a 4-image cap. `gpt-image` accepts more, but in practice 2–3 references gives the cleanest composition; bump the cap in the script if you have a real need.
 
 ## Prompt craft
 

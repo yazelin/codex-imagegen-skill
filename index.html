@@ -220,7 +220,7 @@
     <span class="badge"><span class="dot"></span>Claude Code skill · MIT</span>
     <h1>generate images from Claude Code<br><span class="accent">on your ChatGPT subscription</span></h1>
     <p class="tagline">
-      A tiny skill that routes image generation through Codex CLI's <code class="inline">$imagegen</code>,
+      A tiny skill that routes image generation <strong>and multi-image edit</strong> through Codex CLI's <code class="inline">$imagegen</code>,
       so your existing ChatGPT Plus/Pro quota does the work — no extra OpenAI API credits.
     </p>
     <div class="cta">
@@ -298,14 +298,42 @@
     <p>Inside Claude Code, just ask:</p>
 <pre>Generate a cute Shiba Inu with a red bow tie in watercolor style,
 save to /tmp/test-shiba.png</pre>
-    <p>Or run the bundled script directly:</p>
+    <p>Or run the bundled script directly (text-to-image, 2 args):</p>
 <pre>~/.claude/skills/codex-imagegen/codex-imagegen.sh \
   <span class="accent">"a tiny shiba inu with a red bow tie, watercolor, no text"</span> \
   /tmp/test-shiba.png</pre>
   </section>
 
   <section class="card">
-    <h2><span class="num">6</span>What's in the box</h2>
+    <h2><span class="num">6</span>Multi-image edit <span style="font-size:14px; font-weight:500; color:var(--accent-2);">· new</span></h2>
+    <p>Pass <strong>1–4 reference images</strong> as trailing positional args to do composition / outfit-swap / scene-merge / style-transfer / text-localization. The script builds the canonical <code class="inline">Use case: image-edit / Input images: Image 1: … / Image 2: …</code> scaffolding that <code class="inline">gpt-image</code>'s edit mode keys off, and emits one <code class="inline">--image</code> flag per reference into <code class="inline">codex exec</code>.</p>
+<pre><span class="comment"># composition: subject from image 1 placed into scene from image 2</span>
+~/.claude/skills/codex-imagegen/codex-imagegen.sh \
+  <span class="accent">"place the subject from image 1 into the scene from image 2; match lighting and perspective"</span> \
+  /tmp/composite.png \
+  ~/Pictures/person.png \
+  ~/Pictures/kitchen.png
+
+<span class="comment"># outfit-swap with 2 garment references</span>
+~/.claude/skills/codex-imagegen/codex-imagegen.sh \
+  <span class="accent">"replace the clothing on image 1 with the garment from image 2 and the shoes from image 3; preserve face, body, and pose"</span> \
+  /tmp/outfit.png \
+  ~/Pictures/model.png \
+  ~/Pictures/jacket.png \
+  ~/Pictures/shoes.png</pre>
+    <p>For multi-image prompts, refer to inputs by their position in the arg list: <em>image 1</em>, <em>image 2</em>, etc. Typical use cases:</p>
+    <ul>
+      <li><strong>composition</strong> — "place subject from image 1 into the scene from image 2"</li>
+      <li><strong>outfit-swap</strong> — "replace clothing on image 1 with garments from image 2 and image 3"</li>
+      <li><strong>style-transfer</strong> — "apply the visual style of image 1 to the subject in image 2"</li>
+      <li><strong>text-localization</strong> — "translate every text element in image 1 to Japanese; preserve typography"</li>
+      <li><strong>sketch-to-render</strong> — "turn the line drawing in image 1 into a photorealistic render"</li>
+    </ul>
+    <p>The 4-image cap is a practical default — <code class="inline">gpt-image</code> accepts more, but in practice 2–3 references give the cleanest composition. Bump the cap in the script if you have a real need.</p>
+  </section>
+
+  <section class="card">
+    <h2><span class="num">7</span>What's in the box</h2>
     <div class="features">
       <div class="feature">
         <h3><span class="ico a1">⌘</span>SKILL.md</h3>
@@ -313,7 +341,7 @@ save to /tmp/test-shiba.png</pre>
       </div>
       <div class="feature">
         <h3><span class="ico a2">⏵</span>codex-imagegen.sh</h3>
-        <p>Standalone wrapper. Runs <code class="inline">codex exec '$imagegen ...'</code>, locates the output PNG, copies it to your target path.</p>
+        <p>Standalone wrapper. Text-to-image with 2 args; multi-image edit (1–4 references) when you add reference paths as trailing args. Locates the output PNG and copies it to your target path.</p>
       </div>
       <div class="feature">
         <h3><span class="ico a3">✓</span>Portable</h3>
