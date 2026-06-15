@@ -306,7 +306,7 @@ save to /tmp/test-shiba.png</pre>
 
   <section class="card">
     <h2><span class="num">6</span>Multi-image edit <span style="font-size:14px; font-weight:500; color:var(--accent-2);">· new</span></h2>
-    <p>Pass <strong>1–4 reference images</strong> as trailing positional args to do composition / outfit-swap / scene-merge / style-transfer / text-localization. The script builds the canonical <code class="inline">Use case: image-edit / Input images: Image 1: … / Image 2: …</code> scaffolding that <code class="inline">gpt-image</code>'s edit mode keys off, and emits one <code class="inline">--image</code> flag per reference into <code class="inline">codex exec</code>.</p>
+    <p>Pass <strong>1–16 reference images</strong> as trailing positional args to do composition / outfit-swap / scene-merge / style-transfer / text-localization. The script builds the canonical <code class="inline">Use case: image-edit / Input images: Image 1: … / Image 2: …</code> scaffolding that <code class="inline">gpt-image</code>'s edit mode keys off, and emits one <code class="inline">--image</code> flag per reference into <code class="inline">codex exec</code>.</p>
 <pre><span class="comment"># composition: subject from image 1 placed into scene from image 2</span>
 ~/.claude/skills/codex-imagegen/codex-imagegen.sh \
   <span class="accent">"place the subject from image 1 into the scene from image 2; match lighting and perspective"</span> \
@@ -329,7 +329,7 @@ save to /tmp/test-shiba.png</pre>
       <li><strong>text-localization</strong> — "translate every text element in image 1 to Japanese; preserve typography"</li>
       <li><strong>sketch-to-render</strong> — "turn the line drawing in image 1 into a photorealistic render"</li>
     </ul>
-    <p>The 4-image cap is a practical default — <code class="inline">gpt-image</code> accepts more, but in practice 2–3 references give the cleanest composition. Bump the cap in the script if you have a real need.</p>
+    <p>The cap is <strong>16 images</strong> — <code class="inline">gpt-image</code> edit's documented hard limit (the OpenAI Images API rejects more). In practice 2–3 references still give the cleanest composition, so prefer the fewest that express the edit.</p>
   </section>
 
   <section class="card">
@@ -341,7 +341,7 @@ save to /tmp/test-shiba.png</pre>
       </div>
       <div class="feature">
         <h3><span class="ico a2">⏵</span>codex-imagegen.sh</h3>
-        <p>Standalone wrapper. Text-to-image with 2 args; multi-image edit (1–4 references) when you add reference paths as trailing args. Locates the output PNG and copies it to your target path.</p>
+        <p>Standalone wrapper. Text-to-image with 2 args; multi-image edit (1–16 references) when you add reference paths as trailing args. Locates the output PNG and copies it to your target path.</p>
       </div>
       <div class="feature">
         <h3><span class="ico a3">✓</span>Portable</h3>

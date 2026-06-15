@@ -7,7 +7,7 @@
 #       Text-to-image: generate a new image from <prompt>.
 #
 #   codex-imagegen.sh "<prompt>" "<target-path>" <reference-image> [<reference-image> ...]
-#       Image-edit: pass 1–4 reference images that codex's built-in image_gen tool
+#       Image-edit: pass 1–16 reference images that codex's built-in image_gen tool
 #       hands to gpt-image edit (composition, outfit-swap, scene-merge, style-transfer,
 #       text-localization, ...). <prompt> describes the edit in plain English; for
 #       composition the model reads "image 1 / image 2 / ..." by their order in the
@@ -26,7 +26,7 @@ usage() {
   cat >&2 <<'USAGE'
 usage:
   codex-imagegen.sh <prompt> <target-path>                       # text-to-image
-  codex-imagegen.sh <prompt> <target-path> <ref> [<ref> ...]     # image-edit (1-4 refs)
+  codex-imagegen.sh <prompt> <target-path> <ref> [<ref> ...]     # image-edit (1-16 refs)
 USAGE
   exit 64
 }
@@ -38,10 +38,10 @@ TARGET="$2"
 shift 2
 REFS=("$@")
 
-if (( ${#REFS[@]} > 4 )); then
-  echo "ERROR: at most 4 reference images supported (got ${#REFS[@]})" >&2
-  echo "        gpt-image edit accepts more, but 4 is a sane practical cap;" >&2
-  echo "        bump this in the script if you have a real need." >&2
+if (( ${#REFS[@]} > 16 )); then
+  echo "ERROR: at most 16 reference images supported (got ${#REFS[@]})" >&2
+  echo "        16 is gpt-image edit's documented hard cap; the API rejects more." >&2
+  echo "        Note: 2-3 references still give the cleanest composition in practice." >&2
   exit 64
 fi
 
