@@ -8,7 +8,7 @@ If you already pay for ChatGPT (Plus / Pro) and you already have Codex CLI insta
 
 - A skill Claude Code automatically picks up when you ask it to generate or edit an image
 - A standalone CLI script (`codex-imagegen.sh`) you can use in any batch pipeline
-- **Multi-image edit**: pass 1–4 reference images for composition / outfit-swap / scene-merge / style-transfer / text-localization (powered by `gpt-image` edit mode)
+- **Multi-image edit**: pass 1–16 reference images for composition / outfit-swap / scene-merge / style-transfer / text-localization (powered by `gpt-image` edit mode)
 - Detailed prompt-craft guidance baked into the skill so the model produces consistent, useful outputs
 
 ## Example output
@@ -64,7 +64,7 @@ Or test the bundled script directly from your shell:
   "a tiny shiba inu with a red bow tie, watercolor, no text" \
   /tmp/test-shiba.png
 
-# Image-edit / composition (3+ args: prompt, target, then 1–4 reference images)
+# Image-edit / composition (3+ args: prompt, target, then 1–16 reference images)
 ~/.claude/skills/codex-imagegen/codex-imagegen.sh \
   "place the subject from image 1 into the scene from image 2; match lighting and perspective" \
   /tmp/test-composite.png \

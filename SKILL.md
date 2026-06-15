@@ -1,6 +1,6 @@
 ---
 name: codex-imagegen
-description: Generate or edit images via Codex CLI's $imagegen shorthand, using the user's ChatGPT subscription quota instead of OpenAI Images API credits. Supports pure text-to-image AND multi-image edit (composition, outfit-swap, scene-merge, style-transfer) with 1–4 reference images. Use when the user wants to generate or transform PNG images, has Codex CLI installed and logged in, and the use case is personal/local (not a production backend serving end users).
+description: Generate or edit images via Codex CLI's $imagegen shorthand, using the user's ChatGPT subscription quota instead of OpenAI Images API credits. Supports pure text-to-image AND multi-image edit (composition, outfit-swap, scene-merge, style-transfer) with 1–16 reference images. Use when the user wants to generate or transform PNG images, has Codex CLI installed and logged in, and the use case is personal/local (not a production backend serving end users).
 ---
 
 # codex-imagegen
@@ -10,7 +10,7 @@ Generate or edit images by invoking Codex CLI's built-in `$imagegen` tool in non
 Two modes:
 
 - **Text-to-image** (default, 2-arg form): generate a brand-new image from a text prompt.
-- **Image-edit** (3+ arg form): pass 1–4 reference images so `gpt-image` can do composition, outfit-swap, scene-merge, style-transfer, text-localization, etc. The script builds the canonical `Use case: image-edit` / `Input images: Image 1 / Image 2 / ...` prompt scaffolding the built-in `image_gen` tool keys off.
+- **Image-edit** (3+ arg form): pass 1–16 reference images so `gpt-image` can do composition, outfit-swap, scene-merge, style-transfer, text-localization, etc. The script builds the canonical `Use case: image-edit` / `Input images: Image 1 / Image 2 / ...` prompt scaffolding the built-in `image_gen` tool keys off.
 
 ## When this skill applies
 
@@ -34,7 +34,7 @@ The skill ships with `codex-imagegen.sh`. Run it from the directory containing t
 bash "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/skills/codex-imagegen}/codex-imagegen.sh" \
   "<prompt>" "<output-path>"
 
-# Image-edit (1–4 reference images)
+# Image-edit (1–16 reference images)
 bash "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/skills/codex-imagegen}/codex-imagegen.sh" \
   "<edit prompt>" "<output-path>" "<ref1.png>" "<ref2.png>" ...
 ```
@@ -63,7 +63,7 @@ For multi-image edits the prompt should reference inputs by their position in th
 | text-localization | "translate every text element in image 1 to Japanese; preserve typography, layout, and spacing" |
 | sketch-to-render | "turn the line drawing in image 1 into a photorealistic render; preserve layout and proportions" |
 
-The script enforces a 4-image cap. `gpt-image` accepts more, but in practice 2–3 references gives the cleanest composition; bump the cap in the script if you have a real need.
+The script enforces a 16-image cap, which is `gpt-image` edit's documented hard limit (the OpenAI Images API rejects more). In practice 2–3 references still give the cleanest composition — more references make the model's job harder, so prefer the fewest that express the edit.
 
 ## Prompt craft
 
