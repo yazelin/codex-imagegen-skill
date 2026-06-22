@@ -107,13 +107,54 @@ if [[ -z "$SID" ]]; then
   exit 1
 fi
 
+# Codex's output location changed across versions:
+#   - older: a PNG is written to $CODEX_HOME/generated_images/$SID/*.png
+#   - 0.141+: the image is NOT written to disk; it's embedded as base64 in the
+#     session rollout (the `result` field of the image_generation_end /
+#     image_generation_call event). Try the on-disk PNG first, then fall back to
+#     decoding the base64 out of the rollout .jsonl.
 SRC_DIR="$CODEX_HOME/generated_images/$SID"
 SRC=$(ls -t "$SRC_DIR"/*.png 2>/dev/null | head -1 || true)
-if [[ -z "$SRC" ]]; then
-  echo "ERROR: no PNG found in $SRC_DIR" >&2
-  echo "(codex reported success but the output directory is empty — try re-running)" >&2
+if [[ -n "$SRC" ]]; then
+  cp "$SRC" "$TARGET"
+  realpath "$TARGET"
+  exit 0
+fi
+
+# Fallback: decode the base64 PNG embedded in the session rollout (codex >= 0.141).
+ROLLOUT=$(find "$CODEX_HOME/sessions" -type f -name "*$SID.jsonl" 2>/dev/null | head -1 || true)
+if [[ -z "$ROLLOUT" ]]; then
+  echo "ERROR: no PNG in $SRC_DIR and no rollout file for session $SID" >&2
+  echo "(codex reported success but produced no retrievable image — try re-running)" >&2
   exit 1
 fi
 
-cp "$SRC" "$TARGET"
-realpath "$TARGET"
+if python3 - "$ROLLOUT" "$TARGET" <<'PY'
+import base64, json, sys
+rollout, target = sys.argv[1], sys.argv[2]
+b64 = None
+with open(rollout, encoding="utf-8") as fh:
+    for line in fh:
+        if "iVBORw0KGgo" not in line:          # cheap pre-filter: PNG base64 magic
+            continue
+        try:
+            obj = json.loads(line)
+        except Exception:
+            continue
+        payload = obj.get("payload", {}) if isinstance(obj, dict) else {}
+        if payload.get("type") in ("image_generation_end", "image_generation_call"):
+            result = payload.get("result")
+            if isinstance(result, str) and result:
+                b64 = result                    # keep the last (newest) image
+if not b64:
+    sys.exit("no base64 image found in rollout")
+with open(target, "wb") as out:
+    out.write(base64.b64decode(b64))
+PY
+then
+  realpath "$TARGET"
+else
+  echo "ERROR: codex produced no PNG file, and no decodable base64 image was found" >&2
+  echo "       in the rollout: $ROLLOUT" >&2
+  exit 1
+fi
